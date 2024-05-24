@@ -12,21 +12,19 @@ const bookBikeModule = (function () {
   let buildTimeOut = (bikeId) => {
     return {
       state: 0, //0: off  1: on
+      finished: 0,
       startTimeOut: function () {
-        if (this.state == 0) {
-          this.state = 1;
-          setTimeout(() => {}, 5000);
-        }
+        this.state = 1;
+        setTimeout(() => {
+          console.log('FINISH')
+          lastPromiseResolve[bikeId - 1]('booked')
+          lastPromiseResolve[bikeId - 1] = null
+          lastPromiseReject[bikeId - 1] = null
+          this.finished = 1
+        }, 5000);
       },
     };
   };
-
-  let promises = Array(5)
-    .fill(null)
-    .map(() => Array(5).fill(null));
-  let rejectedProm = Array(5)
-    .fill(null)
-    .map(() => Array(5).fill(null));
 
   let bikesTimeouts = [
     buildTimeOut(1),
@@ -36,53 +34,49 @@ const bookBikeModule = (function () {
     buildTimeOut(5),
   ];
 
-  let bookBike = (bikeId, slotId) => {
-    promises[bikeId - 1][slotId - 1] = new Promise((resolve, reject) => {
-      rejectedProm[bikeId - 1][slotId - 1] = reject;
-      if (bikesTimeouts[bikeId - 1].state == 1 && bikeId == slotId) {
-        for (let i = 0; i < 5; i++) {
-          if (promises[bikeId - 1][i] != null && i != slotId - 1) {
-            rejectedProm[bikeId - 1][i]("rejected");
-          }
-        }
-      } else {
-        bikesTimeouts[bikeId - 1].startTimeOut();
-        for (let i = 0; i < 5; i++) {
-          if (promises[bikeId - 1][i] != null) {
-            resolve("booked");
-          }
-        }
-      }
-    });
-  };
+  let lastPromiseReject = [null, null, null, null, null]
+  let lastPromiseResolve = [null, null, null, null, null]
 
-  return {
-    bookBike: bookBike,
-    promises: promises,
-    rejectedProm: rejectedProm,
-  };
-})();
+  let bookBike = (bikeId, slotId) => {
+    return new Promise((resolve, reject) => {
+      console.log(lastPromiseReject)
+      console.log(lastPromiseResolve)
+      if(bikesTimeouts[bikeId -1].state == 0){
+        bikesTimeouts[bikeId -1].startTimeOut()
+        lastPromiseReject[bikeId - 1] = reject
+        lastPromiseResolve[bikeId - 1] = resolve
+      }else{
+        lastPromiseReject[bikeId - 1]('rejected')
+        lastPromiseReject[bikeId - 1] = reject
+        lastPromiseResolve[bikeId - 1] = resolve
+      }
+    })
+  }
+  return{
+    bookBike : bookBike,
+  } 
+})()
 
 app.get("/book", function (req, res) {
-  /* bookBikeModule.bookBike(Number(req.query.bikeId), Number(req.query.slotId));
-      let x = bookBikeModule.promises[Number(req.query.bikeId - 1)][Number(req.query.slotId - 1)]
-      console.log(x);      
-      x.then((value) => {
-        res.write(value);
-        res.end();
-      }).catch((err) => {
-        res.write(err);
-        res.end();
-      }).finally(() => {
-        res.end();
-      });   */
-
-  // hardcoded response for when bookBike function is not implemented
+    console.log(req.query.bikeId);
+    console.log(req.query.slotId);
+    bookBikeModule.bookBike(req.query.bikeId, req.query.slotId)
+    .then((result) => {
+      res.write(result);
+      res.end();
+    }).catch(error => {
+      res.write(error); 
+      res.end();
+    })
+ 
+ /*  // hardcoded response for when bookBike function is not implemented
   const randomBoolean = Math.random() < 0.5;
   setTimeout(() => {
     res.write(randomBoolean ? "booked" : "rejected");
     res.end();
   }, 1000);
+  } */
+  
 });
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

@@ -24,7 +24,7 @@ export default {
             this.$emit('update:modelValue', false)
             if (this.bgColor == '') {
                 this.bgColor = 'yellow';
-                fetch(`http://localhost:3001/book?bikeId=${this.bikeId}&slotId=${this.$slotId}`, {
+                fetch(`http://localhost:3001/book?bikeId=${this.bikeId}&slotId=${this.slotId}`, {
                     method: 'GET',
                 }).then(response => response.text())
                     .then(data => {
