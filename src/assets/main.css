@@ -1,0 +1,9 @@
+table { border-collapse: collapse; }
+
+table, th, tr, td {
+    border: 1px solid grey;
+    padding: 5px;
+}
+td {
+    cursor: pointer;
+}
