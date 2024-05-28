@@ -17,10 +17,8 @@ const bookBikeModule = (function () {
         this.state = 1;
         setTimeout(() => {
           console.log('FINISH')
-          lastPromiseResolve[bikeId - 1]('booked')
-          lastPromiseResolve[bikeId - 1] = null
-          lastPromiseReject[bikeId - 1] = null
-          this.finished = 1
+          lastPromise[bikeId - 1 ].resolveF()
+          this.state = 0
         }, 5000);
       },
     };
@@ -34,22 +32,17 @@ const bookBikeModule = (function () {
     buildTimeOut(5),
   ];
 
-  let lastPromiseReject = [null, null, null, null, null]
-  let lastPromiseResolve = [null, null, null, null, null]
+  let lastPromise = [null, null, null, null, null]
 
   let bookBike = (bikeId, slotId) => {
     return new Promise((resolve, reject) => {
-      console.log(lastPromiseReject)
-      console.log(lastPromiseResolve)
+      console.log(lastPromise)
       if(bikesTimeouts[bikeId -1].state == 0){
         bikesTimeouts[bikeId -1].startTimeOut()
-        lastPromiseReject[bikeId - 1] = reject
-        lastPromiseResolve[bikeId - 1] = resolve
       }else{
-        lastPromiseReject[bikeId - 1]('rejected')
-        lastPromiseReject[bikeId - 1] = reject
-        lastPromiseResolve[bikeId - 1] = resolve
+        lastPromise[bikeId-1].rejectF()
       }
+      lastPromise[bikeId-1] ={rejectF: reject, resolveF: resolve}
     })
   }
   return{
@@ -62,10 +55,10 @@ app.get("/book", function (req, res) {
     console.log(req.query.slotId);
     bookBikeModule.bookBike(req.query.bikeId, req.query.slotId)
     .then((result) => {
-      res.write(result);
+      res.write('booked');
       res.end();
     }).catch(error => {
-      res.write(error); 
+      res.write('rejected'); 
       res.end();
     })
  
