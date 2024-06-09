@@ -1,53 +1,45 @@
 <script>
 export default {
-    props: ['bikeId', 'slotId', 'modelValue'],
-    emits: ['update:modelValue'],
-    data() {
-        return {
-            bgColor: '',
+    props:['bikeId', 'slotId', 'modelValue'],
+    emits:['update:modelValue'],
+    data(){
+        return{
+            color: 'white'
         }
     },
-    watch: {
+    computed:{
+        changeStyle(){
+            if(this.modelValue && this.color == 'white'){
+                this.color = 'grey'
+            }
+            return `background-color: ${this.color}`
+        }
 
     },
-    computed: {
-        bgColorX() {
-            if (this.bgColor == '' && this.modelValue) {
-                this.bgColor = 'gray';
-                return `background-color: ${this.bgColor}`;
-            } else {
-                return `background-color: ${this.bgColor}`;
-            }
-
-        },
-        updateBgColor() {
-            this.$emit('update:modelValue', false)
-            if (this.bgColor == '') {
-                this.bgColor = 'yellow';
-                fetch(`http://localhost:3001/book?bikeId=${this.bikeId}&slotId=${this.slotId}`, {
+    methods:{
+        handleClick(){
+            if(this.color == 'white'){
+                this.color = 'yellow'
+                fetch(`http://localhost:3001/book?bikeId=${this.bikeId}&slotId=${this.slotId}`,{
                     method: 'GET',
-                }).then(response => response.text())
-                    .then(data => {
-                        if (data == 'booked' && this.bgColor == 'yellow') {
-                            this.bgColor = 'green';
-                            this.$emit('update:modelValue', true)
-                        }
-                        if (data == 'rejected' && this.bgColor == 'yellow') {
-                            this.bgColor = 'red';
-                        }
-
+                }).then((res)=> res.text()).then((res1) =>{
+                    if(res1 == 'booked'){
+                        this.color = 'green'
+                        this.$emit('update:modelValue', true)
+                    }else if(res1 == 'rejected'){
+                        this.color = 'red'
                     }
-                    );
-
+                })
             }
-        },
-
-    }
+        }
+    } 
+    
 }
 </script>
 
 <template>
-    <span :style="bgColorX" @click="updateBgColor">Bike:{{ this.bikeId }} Slot:{{ this.slotId }}</span>
+    <span @click="handleClick" :style="changeStyle"> Bike:{{ bikeId }} Slot:{{ slotId }}</span>
 </template>
+
 
 <style></style>
